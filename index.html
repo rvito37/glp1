@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLP-1 Companion — האפליקציה הראשונה בעברית למשתמשי Wegovy ו-Ozempic</title>
+<meta name="description" content="האפליקציה הראשונה והיחידה בעברית למעקב אחר טיפול GLP-1. מעקב זריקות, תזונה, תופעות לוואי ומשקל — הכל במקום אחד.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mint: #3ECDA0;
+  --mint-light: #5DFFC0;
+  --mint-dark: #2BA87E;
+  --ocean: #0A1628;
+  --ocean-mid: #0F2140;
+  --ocean-light: #162B4D;
+  --sky: #4A9BF5;
+  --sky-light: #7CB8FF;
+  --coral: #FF6B6B;
+  --peach: #FFB088;
+  --gold: #FFD700;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8CA3C4;
+  --text-muted: #5A7499;
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Heebo', sans-serif;
+  background: var(--ocean);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  line-height: 1.7;
+}
+
+/* ── Animated Background ── */
+.bg-mesh {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none;
+}
+.bg-orb {
+  position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3;
+}
+.bg-orb-1 { width: 600px; height: 600px; background: var(--mint); top: -200px; right: -100px; animation: float1 20s ease-in-out infinite; }
+.bg-orb-2 { width: 500px; height: 500px; background: var(--sky); bottom: 10%; left: -150px; animation: float2 25s ease-in-out infinite; }
+.bg-orb-3 { width: 400px; height: 400px; background: #7C5CFC; top: 50%; right: 30%; animation: float3 18s ease-in-out infinite; }
+
+@keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-80px,60px) scale(1.1); } }
+@keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(60px,-80px) scale(1.15); } }
+@keyframes float3 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-40px,40px) scale(0.9); } }
+
+.noise-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 1; pointer-events: none; opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ── Content wrapper ── */
+.content { position: relative; z-index: 2; }
+
+/* ── Nav ── */
+nav {
+  position: fixed; top: 0; right: 0; left: 0; z-index: 100;
+  padding: 16px 40px;
+  backdrop-filter: blur(20px);
+  background: rgba(10,22,40,0.7);
+  border-bottom: 1px solid var(--glass-border);
+  transition: all 0.3s;
+}
+nav.scrolled { background: rgba(10,22,40,0.95); }
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.logo {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 700; font-size: 1.6rem;
+  background: linear-gradient(135deg, var(--mint), var(--sky-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+.logo span { font-weight: 400; opacity: 0.7; }
+.nav-cta {
+  background: linear-gradient(135deg, var(--mint), var(--mint-dark));
+  color: var(--ocean); border: none; padding: 10px 24px;
+  border-radius: 50px; font-family: 'Heebo'; font-weight: 700;
+  font-size: 0.95rem; cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(62,205,160,0.3); }
+
+/* ── Hero ── */
+.hero {
+  min-height: 100vh; display: flex; align-items: center;
+  padding: 120px 40px 80px;
+}
+.hero-inner {
+  max-width: 1200px; margin: 0 auto; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+}
+.hero-text { animation: fadeInRight 1s ease-out; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  padding: 8px 18px; border-radius: 50px;
+  font-size: 0.85rem; color: var(--mint-light);
+  margin-bottom: 28px;
+}
+.hero-badge .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--mint); animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+.hero h1 {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 900; line-height: 1.2;
+  margin-bottom: 24px;
+}
+.hero h1 .gradient-text {
+  background: linear-gradient(135deg, var(--mint), var(--sky-light), var(--mint-light));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.hero p {
+  font-size: 1.2rem; color: var(--text-secondary);
+  max-width: 520px; margin-bottom: 36px; line-height: 1.8;
+}
+.hero-form {
+  display: flex; gap: 12px; max-width: 480px;
+}
+.hero-form input {
+  flex: 1; padding: 16px 24px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; color: white; font-family: 'Heebo';
+  font-size: 1rem; direction: ltr; text-align: right;
+  transition: all 0.3s;
+}
+.hero-form input::placeholder { color: var(--text-muted); direction: rtl; }
+.hero-form input:focus { outline: none; border-color: var(--mint); background: rgba(62,205,160,0.08); }
+.hero-form button {
+  padding: 16px 32px; border: none; border-radius: 16px;
+  background: linear-gradient(135deg, var(--mint), var(--mint-dark));
+  color: var(--ocean); font-family: 'Heebo'; font-weight: 800;
+  font-size: 1rem; cursor: pointer; white-space: nowrap;
+  transition: all 0.3s; position: relative; overflow: hidden;
+}
+.hero-form button:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(62,205,160,0.35); }
+.hero-form button .shimmer {
+  position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shimmer 3s infinite;
+}
+@keyframes shimmer { 0% { left: -100%; } 100% { left: 200%; } }
+
+.hero-stats {
+  display: flex; gap: 40px; margin-top: 40px;
+}
+.hero-stat { text-align: center; }
+.hero-stat .num {
+  font-family: 'Rubik'; font-size: 1.8rem; font-weight: 700;
+  color: var(--mint-light);
+}
+.hero-stat .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+/* Phone mockup */
+.hero-visual {
+  display: flex; justify-content: center; align-items: center;
+  animation: fadeInLeft 1s ease-out 0.3s both;
+}
+.phone-mockup {
+  width: 300px; height: 600px;
+  background: linear-gradient(145deg, var(--ocean-mid), var(--ocean-light));
+  border-radius: 40px; border: 3px solid rgba(255,255,255,0.1);
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  position: relative; overflow: hidden;
+  padding: 20px;
+}
+.phone-notch {
+  width: 120px; height: 28px; background: var(--ocean);
+  border-radius: 0 0 16px 16px; margin: 0 auto 20px;
+}
+.phone-screen {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.phone-card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; padding: 16px;
+  animation: cardSlide 0.8s ease-out both;
+}
+.phone-card:nth-child(2) { animation-delay: 0.2s; }
+.phone-card:nth-child(3) { animation-delay: 0.4s; }
+.phone-card:nth-child(4) { animation-delay: 0.6s; }
+
+@keyframes cardSlide { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+.phone-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px;
+}
+.phone-card-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+.phone-card-icon { font-size: 1.1rem; }
+
+.injection-visual {
+  display: flex; align-items: center; gap: 12px;
+}
+.injection-ring {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid var(--mint); display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; position: relative;
+}
+.injection-ring::after {
+  content: ''; position: absolute; top: -3px; right: -3px;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--mint); border: 2px solid var(--ocean-mid);
+}
+.injection-info .dose { font-size: 0.9rem; font-weight: 700; }
+.injection-info .time { font-size: 0.7rem; color: var(--text-muted); }
+
+.progress-bar-container { margin-top: 4px; }
+.progress-label { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-bottom: 4px; }
+.progress-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 10px; animation: progressGrow 2s ease-out 1s both; }
+.progress-fill.protein { background: linear-gradient(90deg, var(--mint), var(--mint-light)); width: 72%; }
+.progress-fill.water { background: linear-gradient(90deg, var(--sky), var(--sky-light)); width: 58%; }
+@keyframes progressGrow { from { width: 0; } }
+
+.weight-chart {
+  display: flex; align-items: flex-end; gap: 6px; height: 50px; padding-top: 8px;
+}
+.weight-bar {
+  flex: 1; background: linear-gradient(to top, var(--mint-dark), var(--mint));
+  border-radius: 4px 4px 0 0; animation: barGrow 1s ease-out both;
+  min-width: 0;
+}
+.weight-bar:nth-child(1) { height: 90%; animation-delay: 0.8s; }
+.weight-bar:nth-child(2) { height: 85%; animation-delay: 0.9s; }
+.weight-bar:nth-child(3) { height: 78%; animation-delay: 1.0s; }
+.weight-bar:nth-child(4) { height: 70%; animation-delay: 1.1s; }
+.weight-bar:nth-child(5) { height: 62%; animation-delay: 1.2s; }
+.weight-bar:nth-child(6) { height: 55%; animation-delay: 1.3s; }
+.weight-bar:nth-child(7) { height: 48%; animation-delay: 1.4s; }
+@keyframes barGrow { from { height: 0; } }
+
+/* ── Features ── */
+.features {
+  padding: 100px 40px;
+}
+.features-inner { max-width: 1200px; margin: 0 auto; }
+.section-header {
+  text-align: center; margin-bottom: 64px;
+}
+.section-tag {
+  display: inline-block; font-size: 0.85rem; font-weight: 600;
+  color: var(--mint); text-transform: uppercase; letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+.section-header h2 {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 800; margin-bottom: 16px;
+}
+.section-header p {
+  color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto;
+}
+
+.features-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.feature-card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 24px; padding: 36px 28px;
+  transition: all 0.4s;
+  position: relative; overflow: hidden;
+}
+.feature-card::before {
+  content: ''; position: absolute; top: 0; right: 0; left: 0;
+  height: 3px; background: linear-gradient(90deg, var(--mint), var(--sky));
+  opacity: 0; transition: opacity 0.4s;
+}
+.feature-card:hover { transform: translateY(-4px); border-color: rgba(62,205,160,0.2); }
+.feature-card:hover::before { opacity: 1; }
+.feature-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; margin-bottom: 20px;
+}
+.feature-icon.mint { background: rgba(62,205,160,0.12); }
+.feature-icon.sky { background: rgba(74,155,245,0.12); }
+.feature-icon.coral { background: rgba(255,107,107,0.12); }
+.feature-icon.peach { background: rgba(255,176,136,0.12); }
+.feature-icon.gold { background: rgba(255,215,0,0.12); }
+.feature-icon.purple { background: rgba(124,92,252,0.12); }
+
+.feature-card h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
+.feature-card p { font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7; }
+
+/* ── Social Proof ── */
+.social-proof {
+  padding: 80px 40px;
+}
+.social-inner { max-width: 1200px; margin: 0 auto; }
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  margin-bottom: 60px;
+}
+.stat-card {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 20px; padding: 32px 24px; text-align: center;
+}
+.stat-card .big {
+  font-family: 'Rubik'; font-size: 2.4rem; font-weight: 700;
+}
+.stat-card .big.mint { color: var(--mint-light); }
+.stat-card .big.sky { color: var(--sky-light); }
+.stat-card .big.coral { color: var(--coral); }
+.stat-card .big.gold { color: var(--gold); }
+.stat-card .desc { color: var(--text-secondary); font-size: 0.9rem; margin-top: 8px; }
+
+.testimonials {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.testimonial {
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 20px; padding: 28px;
+}
+.testimonial-text { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; }
+.testimonial-author { display: flex; align-items: center; gap: 12px; }
+.testimonial-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--mint), var(--sky));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.9rem;
+}
+.testimonial-name { font-weight: 600; font-size: 0.9rem; }
+.testimonial-role { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ── Pricing hint ── */
+.pricing {
+  padding: 80px 40px;
+}
+.pricing-inner { max-width: 800px; margin: 0 auto; }
+.pricing-card {
+  background: linear-gradient(135deg, var(--glass), rgba(62,205,160,0.05));
+  border: 1px solid rgba(62,205,160,0.15);
+  border-radius: 28px; padding: 48px; text-align: center;
+}
+.pricing-card h3 {
+  font-size: 1.8rem; font-weight: 800; margin-bottom: 12px;
+}
+.pricing-card .price-line {
+  font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 8px;
+}
+.pricing-card .price-note {
+  font-size: 0.9rem; color: var(--mint-light); margin-bottom: 32px;
+}
+.pricing-card .price-note strong { color: var(--mint); }
+.pricing-features {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px;
+  text-align: right; margin-bottom: 36px;
+}
+.pricing-feature {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.95rem; color: var(--text-secondary);
+}
+.pricing-feature .check { color: var(--mint); font-size: 1.1rem; }
+
+/* ── Final CTA ── */
+.final-cta {
+  padding: 100px 40px;
+}
+.cta-inner { max-width: 700px; margin: 0 auto; text-align: center; }
+.cta-inner h2 {
+  font-size: clamp(2rem, 4vw, 2.6rem); font-weight: 800; margin-bottom: 16px;
+}
+.cta-inner p { color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 36px; }
+.cta-form {
+  display: flex; gap: 12px; justify-content: center; max-width: 500px; margin: 0 auto 24px;
+}
+.cta-form input {
+  flex: 1; padding: 16px 24px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 16px; color: white; font-family: 'Heebo';
+  font-size: 1rem; direction: ltr; text-align: right;
+}
+.cta-form input::placeholder { color: var(--text-muted); direction: rtl; }
+.cta-form input:focus { outline: none; border-color: var(--mint); }
+.cta-form button {
+  padding: 16px 36px; border: none; border-radius: 16px;
+  background: linear-gradient(135deg, var(--mint), var(--mint-dark));
+  color: var(--ocean); font-family: 'Heebo'; font-weight: 800;
+  font-size: 1rem; cursor: pointer; white-space: nowrap;
+  transition: all 0.3s;
+}
+.cta-form button:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(62,205,160,0.35); }
+.cta-note { font-size: 0.85rem; color: var(--text-muted); }
+
+/* ── Footer ── */
+footer {
+  padding: 40px; border-top: 1px solid var(--glass-border);
+  text-align: center; color: var(--text-muted); font-size: 0.85rem;
+}
+
+/* ── Success state ── */
+.form-success {
+  display: none; align-items: center; gap: 12px;
+  background: rgba(62,205,160,0.1); border: 1px solid rgba(62,205,160,0.3);
+  border-radius: 16px; padding: 16px 24px;
+  font-weight: 600; color: var(--mint-light);
+}
+.form-success.show { display: flex; }
+.form-success .checkmark { font-size: 1.4rem; }
+
+/* ── Animations ── */
+@keyframes fadeInRight { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:none; } }
+@keyframes fadeInLeft { from { opacity:0; transform:translateX(-40px); } to { opacity:1; transform:none; } }
+@keyframes fadeInUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:none; } }
+
+.reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.reveal.visible { opacity: 1; transform: none; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: 1fr; text-align: center; }
+  .hero p { margin: 0 auto 36px; }
+  .hero-form { flex-direction: column; max-width: 400px; margin: 0 auto; }
+  .hero-stats { justify-content: center; }
+  .hero-visual { order: -1; margin-bottom: 20px; }
+  .phone-mockup { width: 250px; height: 500px; }
+  .features-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .testimonials { grid-template-columns: 1fr; }
+  .pricing-features { grid-template-columns: 1fr; }
+  .cta-form { flex-direction: column; }
+  nav { padding: 12px 20px; }
+  .hero, .features, .social-proof, .pricing, .final-cta { padding-right: 20px; padding-left: 20px; }
+}
+
+@media (max-width: 480px) {
+  .hero-stats { flex-direction: column; gap: 16px; }
+  .stats-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-mesh">
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+</div>
+<div class="noise-overlay"></div>
+
+<div class="content">
+
+<!-- Nav -->
+<nav id="nav">
+  <div class="nav-inner">
+    <div class="logo">GLP-1<span>.co.il</span></div>
+    <button class="nav-cta" onclick="document.getElementById('hero-email').focus()">הצטרפו לרשימת ההמתנה</button>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        בקרוב — האפליקציה הראשונה בעברית
+      </div>
+      <h1>
+        הדרך החכמה<br>
+        <span class="gradient-text">לנהל את ה-GLP-1 שלך</span>
+      </h1>
+      <p>
+        מעקב זריקות, תזונה מותאמת למוצרים ישראליים, תופעות לוואי ומשקל — הכל באפליקציה אחת בעברית.
+        בנוי במיוחד עבור משתמשי Wegovy, Ozempic ו-Mounjaro בישראל.
+      </p>
+
+      <div class="hero-form" id="heroForm">
+        <input type="email" id="hero-email" placeholder="הכניסו את האימייל שלכם" dir="ltr">
+        <button type="button" onclick="submitEmail('heroForm')">
+          <span class="shimmer"></span>
+          רוצה להיות ראשון/ה!
+        </button>
+      </div>
+      <div class="form-success" id="heroSuccess">
+        <span class="checkmark">✓</span>
+        <span>מעולה! נעדכן אותך ברגע שנשיק 🚀</span>
+      </div>
+
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num">60%</div>
+          <div class="label">מהמבוגרים בישראל<br>עם עודף משקל</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">0</div>
+          <div class="label">אפליקציות GLP-1<br>בעברית (עד עכשיו)</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">₪1,300</div>
+          <div class="label">עלות Wegovy לחודש<br>שלא בסל הבריאות</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="phone-mockup">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-card">
+            <div class="phone-card-header">
+              <span class="phone-card-title">הזריקה הבאה</span>
+              <span class="phone-card-icon">💉</span>
+            </div>
+            <div class="injection-visual">
+              <div class="injection-ring">💉</div>
+              <div class="injection-info">
+                <div class="dose">Wegovy 1.0mg</div>
+                <div class="time">יום שישי, 08:00 · בטן שמאל</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="phone-card">
+            <div class="phone-card-header">
+              <span class="phone-card-title">חלבון יומי</span>
+              <span class="phone-card-icon">🥩</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-label"><span>72 גרם</span><span>100 גרם</span></div>
+              <div class="progress-track"><div class="progress-fill protein"></div></div>
+            </div>
+          </div>
+
+          <div class="phone-card">
+            <div class="phone-card-header">
+              <span class="phone-card-title">צריכת מים</span>
+              <span class="phone-card-icon">💧</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-label"><span>1.4 ליטר</span><span>2.5 ליטר</span></div>
+              <div class="progress-track"><div class="progress-fill water"></div></div>
+            </div>
+          </div>
+
+          <div class="phone-card">
+            <div class="phone-card-header">
+              <span class="phone-card-title">ירידה במשקל</span>
+              <span class="phone-card-icon">📉</span>
+            </div>
+            <div class="weight-chart">
+              <div class="weight-bar"></div>
+              <div class="weight-bar"></div>
+              <div class="weight-bar"></div>
+              <div class="weight-bar"></div>
+              <div class="weight-bar"></div>
+              <div class="weight-bar"></div>
+              <div class="weight-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="features-inner">
+    <div class="section-header reveal">
+      <div class="section-tag">מה בפנים</div>
+      <h2>כל מה שצריך לניהול הטיפול — במקום אחד</h2>
+      <p>בנינו את האפליקציה שרצינו בעצמנו כשהתחלנו GLP-1. בעברית, עם מוצרים ישראליים.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon mint">💉</div>
+        <h3>מעקב זריקות חכם</h3>
+        <p>מפת גוף אינטראקטיבית לסיבוב מקומות הזריקה. תזכורות, היסטוריית מינונים, והערכת רמת התרופה בדם.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon sky">📸</div>
+        <h3>סורק מזון AI</h3>
+        <p>צלמו את האוכל או סרקו ברקוד — והאפליקציה תזהה. עובד עם מוצרי שופרסל, רמי לוי, טנובה ושטראוס.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon coral">⚠️</div>
+        <h3>מעקב תופעות לוואי</h3>
+        <p>תעדו בחילה, עצירות, עייפות. האפליקציה מזהה דפוסים ומתאמת לשינויי מינון ותזונה.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon peach">🍗</div>
+        <h3>מעקב חלבון ותזונה</h3>
+        <p>מעקב חלבון, סיבים ומים — קריטי למניעת אובדן שריר. מותאם למנות ישראליות: שקשוקה, חומוס, שניצל.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon gold">📊</div>
+        <h3>דוח PDF לרופא</h3>
+        <p>דוח מקצועי בעברית עם היסטוריית זריקות, מגמת משקל, תופעות לוואי. שתפו ישירות עם הרופא.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon purple">🤖</div>
+        <h3>מאמן AI בעברית</h3>
+        <p>שאלו כל שאלה על GLP-1 — מה לאכול בארוחת שבת? מה לצפות ממינון חדש? תשובות מותאמות אישית.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Social Proof / Stats -->
+<section class="social-proof">
+  <div class="social-inner">
+    <div class="stats-row">
+      <div class="stat-card reveal">
+        <div class="big mint">5.4M</div>
+        <div class="desc">מבוגרים בישראל עם עודף משקל</div>
+      </div>
+      <div class="stat-card reveal">
+        <div class="big sky">₪55B</div>
+        <div class="desc">עלות שנתית של השמנה בישראל</div>
+      </div>
+      <div class="stat-card reveal">
+        <div class="big coral">8x</div>
+        <div class="desc">צמיחה צפויה בשוק ה-GLP-1 עד 2035</div>
+      </div>
+      <div class="stat-card reveal">
+        <div class="big gold">18.4%</div>
+        <div class="desc">קצב צמיחה שנתי של אפליקציות דיאטה דיגיטליות</div>
+      </div>
+    </div>
+
+    <div class="section-header reveal">
+      <div class="section-tag">מה אומרים משתמשי GLP-1</div>
+      <h2>הבעיות שאנחנו פותרים</h2>
+    </div>
+
+    <div class="testimonials">
+      <div class="testimonial reveal">
+        <div class="testimonial-text">
+          "אני משלמת 1,100 ₪ בחודש על Wegovy ואין לי שום כלי בעברית לעקוב אחרי ההתקדמות. רושמת הכל במחברת."
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">מ</div>
+          <div>
+            <div class="testimonial-name">מיכל, 42</div>
+            <div class="testimonial-role">משתמשת Wegovy, תל אביב</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial reveal">
+        <div class="testimonial-text">
+          "ניסיתי אפליקציות באנגלית אבל כל המזון שם אמריקאי. אני צריך לדעת כמה חלבון יש בפיתה עם חומוס, לא בהמבורגר."
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">א</div>
+          <div>
+            <div class="testimonial-name">אלי, 38</div>
+            <div class="testimonial-role">משתמש Ozempic, חיפה</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial reveal">
+        <div class="testimonial-text">
+          "כל פעם ששוכח איפה עשיתי את הזריקה האחרונה. וכשהרופאה שואלת על תופעות לוואי אני לא זוכרת כלום."
+        </div>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">ר</div>
+          <div>
+            <div class="testimonial-name">רונית, 51</div>
+            <div class="testimonial-role">משתמשת Wegovy, ירושלים</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing hint -->
+<section class="pricing">
+  <div class="pricing-inner">
+    <div class="pricing-card reveal">
+      <h3>גישה מוקדמת — חינם לחלוטין</h3>
+      <div class="price-line">המצטרפים לרשימת ההמתנה יקבלו גישה חינמית לגרסת הבטא</div>
+      <div class="price-note">
+        בהמשך: <strong>₪39-69/חודש</strong> · רק 3-5% ממה שאתם כבר משלמים על התרופה
+      </div>
+      <div class="pricing-features">
+        <div class="pricing-feature"><span class="check">✓</span> מעקב זריקות וסיבוב מקומות</div>
+        <div class="pricing-feature"><span class="check">✓</span> סורק מזון AI עם מוצרים ישראליים</div>
+        <div class="pricing-feature"><span class="check">✓</span> מעקב חלבון, מים ומשקל</div>
+        <div class="pricing-feature"><span class="check">✓</span> התאמה אישית למינון שלכם</div>
+        <div class="pricing-feature"><span class="check">✓</span> דוח PDF לרופא בעברית</div>
+        <div class="pricing-feature"><span class="check">✓</span> מאמן AI שמדבר עברית</div>
+        <div class="pricing-feature"><span class="check">✓</span> מעקב תופעות לוואי וקורלציות</div>
+        <div class="pricing-feature"><span class="check">✓</span> השוואת מחירים בבתי מרקחת</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="final-cta">
+  <div class="cta-inner reveal">
+    <h2>הצטרפו ל-<span style="color:var(--mint)">רשימת ההמתנה</span></h2>
+    <p>היו בין הראשונים לנסות את האפליקציה. גישת בטא חינמית + תוכן בלעדי.</p>
+    <div class="cta-form" id="ctaForm">
+      <input type="email" id="cta-email" placeholder="הכניסו את האימייל שלכם" dir="ltr">
+      <button type="button" onclick="submitEmail('ctaForm')">הרשמה</button>
+    </div>
+    <div class="form-success" id="ctaSuccess">
+      <span class="checkmark">✓</span>
+      <span>נרשמת בהצלחה! נשמור לך מקום 🎉</span>
+    </div>
+    <div class="cta-note">לא נשלח ספאם. רק עדכונים חשובים על ההשקה.</div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 GLP-1.co.il · האפליקציה הראשונה בעברית למשתמשי GLP-1</p>
+  <p style="margin-top: 8px;">האפליקציה אינה מהווה ייעוץ רפואי. יש להתייעץ עם רופא/ה לפני תחילת טיפול.</p>
+</footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Supabase init
+const { createClient } = supabase;
+const sb = createClient(
+  'https://ehpsoqqkcvcuwvrzqlcw.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVocHNvcXFrY3ZjdXd2cnpxbGN3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0OTgwNjIsImV4cCI6MjA4NjA3NDA2Mn0.G1sYpNpv9fbZ3TwDqCwRipuUEXHSCouxtQu6o5hOIzY'
+);
+
+// Scroll nav effect
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// Reveal on scroll
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.15 });
+reveals.forEach(el => observer.observe(el));
+
+// Submit email to Supabase
+async function submitEmail(formId) {
+  const container = document.getElementById(formId);
+  const input = container.querySelector('input[type="email"]');
+  const email = input.value.trim();
+
+  if (!email || !/\S+@\S+\.\S+/.test(email)) {
+    input.style.borderColor = 'var(--coral)';
+    input.style.animation = 'shake 0.4s ease';
+    setTimeout(() => { input.style.borderColor = ''; input.style.animation = ''; }, 600);
+    return;
+  }
+
+  const btn = container.querySelector('button');
+  const origText = btn.textContent;
+  btn.textContent = '...שולח';
+  btn.disabled = true;
+
+  try {
+    const { error } = await sb
+      .from('waitlist')
+      .insert([{ email: email, source: formId === 'heroForm' ? 'hero' : 'cta' }]);
+
+    if (error) {
+      if (error.code === '23505') {
+        // Duplicate email — still show success
+      } else {
+        throw error;
+      }
+    }
+
+    container.style.display = 'none';
+    const successEl = container.nextElementSibling;
+    successEl.classList.add('show');
+  } catch (err) {
+    console.error('Supabase error:', err);
+    btn.textContent = 'שגיאה — נסו שוב';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = origText; }, 2000);
+  }
+}
+
+// Shake animation
+const style = document.createElement('style');
+style.textContent = '@keyframes shake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-8px); } 75% { transform:translateX(8px); } }';
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>
